@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Training Tracker">
+<title>Training Tracker — A Girl &amp; A Gun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple: #9B3B8F;
+  --purple-dark: #7a2d70;
+  --purple-pale: #E5E3EE;
+  --purple-light: #f3f0f7;
+  --blue: #3B7FC4;
+  --blue-pale: #E1E9F7;
+  --olive: #8B9A6E;
+  --olive-pale: #F2F2EA;
+  --green-pale: #E6F0DC;
+  --green-dark: #3A5A1A;
+  --orange-pale: #FFE8CC;
+  --orange-dark: #7A3D00;
+  --gray-light: #E8E8E8;
+  --gray-mid: #ccc;
+  --text: #1a1a1a;
+  --text-muted: #6b6b6b;
+  --text-hint: #999;
+  --bg: #f7f5fa;
+  --card: #ffffff;
+  --border: #e0dce8;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font: 'DM Sans', sans-serif;
+  --font-display: 'DM Serif Display', serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: calc(24px + var(--safe-bottom));
+}
+
+.app-header {
+  background: var(--purple);
+  color: white;
+  padding: calc(16px + var(--safe-top)) 16px 14px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.3px;
+  color: white;
+}
+
+.app-subtitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.75);
+  margin-top: 1px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--purple);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-btn:active { background: var(--purple-pale); }
+
+.nav-arrow { font-size: 16px; line-height: 1; }
+
+.month-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 150px;
+  text-align: center;
+}
+
+.calendar-wrap { padding: 12px 12px 0; }
+
+.dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 4px;
+}
+
+.dow-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-hint);
+  text-align: center;
+  padding: 3px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.day-cell {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  min-height: 58px;
+  background: var(--card);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.day-cell:active { background: var(--purple-light); }
+.day-cell.today { border-color: var(--purple); border-width: 2px; }
+.day-cell.empty { background: transparent; border-color: transparent; cursor: default; }
+.day-cell.has-activity { background: var(--purple-pale); border-color: var(--purple); }
+
+.day-num {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.day-cell.today .day-num { color: var(--purple); font-weight: 700; }
+
+.activity-tags { display: flex; flex-wrap: wrap; gap: 2px; }
+
+.tag {
+  font-size: 7.5px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.2px;
+}
+
+.tag-dryfire { background: var(--purple-pale); color: var(--purple-dark); }
+.tag-livefire { background: var(--orange-pale); color: var(--orange-dark); }
+.tag-fitness { background: var(--green-pale); color: var(--green-dark); }
+.tag-other { background: var(--blue-pale); color: #1A4F8A; }
+
+.week-summary-wrap {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin: 6px 0 10px;
+}
+
+.week-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--purple);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.week-summary-hints {
+  font-size: 10px;
+  color: var(--text-hint);
+  margin-bottom: 6px;
+  font-style: italic;
+}
+
+.week-ta, .mv-ta {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--olive-pale);
+  color: var(--text);
+  resize: none;
+  line-height: 1.5;
+}
+
+.week-ta:focus, .mv-ta:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+.week-divider {
+  height: 1px;
+  background: var(--gray-light);
+  margin: 2px 0 10px;
+}
+
+.month-victories-wrap {
+  margin: 4px 12px 0;
+  background: var(--card);
+  border: 2px solid var(--purple);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.mv-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+.mv-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--purple);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.mv-icon svg { width: 18px; height: 18px; fill: white; }
+
+.mv-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--purple);
+}
+
+.mv-hints {
+  font-size: 11px;
+  color: var(--olive);
+  margin-bottom: 8px;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.mv-ta { background: #faf9fc; }
+
+.save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 4px;
+}
+
+.save-indicator {
+  font-size: 11px;
+  color: var(--olive);
+  min-height: 16px;
+}
+
+.print-btn {
+  background: none;
+  border: 1px solid var(--purple);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--purple);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.print-btn:active { background: var(--purple-pale); }
+
+/* Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  width: 100%;
+  max-width: 480px;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--gray-light);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal-date {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--purple);
+}
+
+.modal-close {
+  background: var(--gray-light);
+  border: none;
+  border-radius: 50%;
+  width: 30px; height: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted);
+}
+
+.act-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 10px;
+}
+
+.act-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+.act-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  font-family: var(--font);
+  text-align: left;
+  transition: all 0.15s;
+}
+
+.act-btn:active { transform: scale(0.98); }
+.btn-label { font-size: 15px; font-weight: 500; color: var(--text); }
+
+.chk {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-mid);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: white;
+  margin-left: auto;
+}
+
+.act-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-dryfire { background: var(--purple); }
+.dot-livefire { background: #C47020; }
+.dot-fitness { background: #5A8A30; }
+.dot-other { background: var(--blue); }
+
+.act-btn.sel-dryfire { border-color: var(--purple); background: var(--purple-pale); }
+.act-btn.sel-dryfire .chk { background: var(--purple); border-color: var(--purple); }
+.act-btn.sel-livefire { border-color: #C47020; background: var(--orange-pale); }
+.act-btn.sel-livefire .chk { background: #C47020; border-color: #C47020; }
+.act-btn.sel-fitness { border-color: #5A8A30; background: var(--green-pale); }
+.act-btn.sel-fitness .chk { background: #5A8A30; border-color: #5A8A30; }
+.act-btn.sel-other { border-color: var(--blue); background: var(--blue-pale); }
+.act-btn.sel-other .chk { background: var(--blue); border-color: var(--blue); }
+
+.other-input-wrap {
+  display: none;
+  margin: -2px 0 8px;
+  padding: 0 2px;
+}
+
+.other-text-input {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--blue);
+  border-radius: var(--radius);
+  background: var(--blue-pale);
+  color: var(--text);
+}
+
+.other-text-input:focus { outline: none; }
+
+.modal-save {
+  width: 100%;
+  padding: 14px;
+  background: var(--purple);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+}
+
+.modal-save:active { background: var(--purple-dark); }
+
+@media print {
+  .app-header { position: static; background: var(--purple) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .month-nav { border: none; }
+  .nav-btn, .print-btn, .modal-overlay { display: none !important; }
+  body { background: white; }
+  .calendar-wrap { padding: 8px; }
+  .week-ta, .mv-ta { border: 1px solid #ccc; background: #fafafa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .day-cell.has-activity { background: #ede9f4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .month-victories-wrap { border: 2px solid var(--purple) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">Training Tracker</div>
+  <div class="app-subtitle">A Girl &amp; A Gun Women's Shooting League</div>
+</div>
+
+<div class="month-nav">
+  <button class="nav-btn" onclick="changeMonth(-1)" aria-label="Previous month">
+    <span class="nav-arrow">&#8249;</span> Prev
+  </button>
+  <div class="month-label" id="monthLabel"></div>
+  <button class="nav-btn" onclick="changeMonth(1)" aria-label="Next month">
+    Next <span class="nav-arrow">&#8250;</span>
+  </button>
+</div>
+
+<div class="save-bar">
+  <div class="save-indicator" id="saveInd"></div>
+  <button class="print-btn" onclick="window.print()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Print / Save PDF
+  </button>
+</div>
+
+<div class="calendar-wrap" id="calBody"></div>
+
+<div class="month-victories-wrap">
+  <div class="mv-header">
+    <div class="mv-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
+    <div class="mv-title">My victories this month</div>
+  </div>
+  <div class="mv-hints">I achieved… &nbsp;·&nbsp; Insights I gained… &nbsp;·&nbsp; I'm looking forward to…</div>
+  <textarea class="mv-ta" rows="5" placeholder="Write your monthly victories here…" id="mvTa"></textarea>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-date" id="modalDate"></div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="act-label">What did you train today?</div>
+    <div class="act-options">
+      <button class="act-btn" id="btn-dryfire" onclick="toggleAct('dryfire')">
+        <span class="act-dot dot-dryfire"></span>
+        <span class="btn-label">Dry Fire</span>
+        <span class="chk" id="chk-dryfire">&#10003;</span>
+      </button>
+      <button class="act-btn" id="btn-livefire" onclick="toggleAct('livefire')">
+        <span class="act-dot dot-livefire"></span>
+        <span class="btn-label">Live Fire</span>
+        <span class="chk" id="chk-livefire">&#10003;</span>
+      </button>
+      <button class="act-btn" id="btn-fitness" onclick="toggleAct('fitness')">
+        <span class="act-dot dot-fitness"></span>
+        <span class="btn-label">Fitness</span>
+        <span class="chk" id="chk-fitness">&#10003;</span>
+      </button>
+      <button class="act-btn" id="btn-other" onclick="toggleAct('other')">
+        <span class="act-dot dot-other"></span>
+        <span class="btn-label">Other</span>
+        <span class="chk" id="chk-other">&#10003;</span>
+      </button>
+      <div class="other-input-wrap" id="otherWrap">
+        <input type="text" class="other-text-input" id="otherInput" placeholder="Describe your activity…" />
+      </div>
+    </div>
+    <button class="modal-save" onclick="saveDay()">Save Training</button>
+  </div>
+</div>
+
+<script>
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const DAY_NAMES=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const ACT={
+  dryfire:{label:"Dry Fire",tagClass:"tag-dryfire"},
+  livefire:{label:"Live Fire",tagClass:"tag-livefire"},
+  fitness:{label:"Fitness",tagClass:"tag-fitness"},
+  other:{label:"Other",tagClass:"tag-other"}
+};
+
+const realNow=new Date();
+let viewYear=realNow.getFullYear();
+let viewMonth=realNow.getMonth();
+let currentEditDay=null;
+let currentSel={};
+let monthData={};
+let saveTimer=null;
+
+function storageKey(y,m){return"tt_days_"+y+"_"+m;}
+function weekKey(y,m,wi){return"tt_week_"+y+"_"+m+"_"+wi;}
+function mvKey(y,m){return"tt_mv_"+y+"_"+m;}
+
+function loadMonthData(y,m){try{const r=localStorage.getItem(storageKey(y,m));return r?JSON.parse(r):{}}catch(e){return{}}}
+function saveMonthData(y,m,d){try{localStorage.setItem(storageKey(y,m),JSON.stringify(d))}catch(e){}}
+function loadWeekText(y,m,wi){try{return localStorage.getItem(weekKey(y,m,wi))||""}catch(e){return""}}
+function saveWeekText(y,m,wi,v){try{localStorage.setItem(weekKey(y,m,wi),v)}catch(e){}}
+function loadMV(y,m){try{return localStorage.getItem(mvKey(y,m))||""}catch(e){return""}}
+function saveMV(y,m,v){try{localStorage.setItem(mvKey(y,m),v)}catch(e){}}
+
+function showSaved(){
+  const el=document.getElementById("saveInd");
+  el.textContent="&#10003; Saved";
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{el.textContent=""},2000);
+}
+
+function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function firstDow(y,m){return new Date(y,m,1).getDay()}
+
+function changeMonth(dir){
+  viewMonth+=dir;
+  if(viewMonth>11){viewMonth=0;viewYear++}
+  if(viewMonth<0){viewMonth=11;viewYear--}
+  monthData=loadMonthData(viewYear,viewMonth);
+  buildCalendar();
+  document.getElementById("mvTa").value=loadMV(viewYear,viewMonth);
+}
+
+function buildCalendar(){
+  document.getElementById("monthLabel").textContent=MONTHS[viewMonth]+" "+viewYear;
+  const container=document.getElementById("calBody");
+  container.innerHTML="";
+
+  const dowRow=document.createElement("div");
+  dowRow.className="dow-row";
+  DAYS.forEach(d=>{const el=document.createElement("div");el.className="dow-label";el.textContent=d;dowRow.appendChild(el)});
+  container.appendChild(dowRow);
+
+  const total=daysInMonth(viewYear,viewMonth);
+  const startD=firstDow(viewYear,viewMonth);
+  const cells=[];
+  for(let i=0;i<startD;i++)cells.push(null);
+  for(let d=1;d<=total;d++)cells.push(d);
+  while(cells.length%7!==0)cells.push(null);
+
+  const weeks=[];
+  for(let i=0;i<cells.length;i+=7)weeks.push(cells.slice(i,i+7));
+
+  weeks.forEach((week,wi)=>{
+    const wg=document.createElement("div");
+    wg.className="week-grid";
+    week.forEach(day=>{
+      const cell=document.createElement("div");
+      if(!day){
+        cell.className="day-cell empty";
+      } else {
+        const isToday=(day===realNow.getDate()&&viewMonth===realNow.getMonth()&&viewYear===realNow.getFullYear());
+        cell.className="day-cell"+(isToday?" today":"");
+        const data=monthData[day]||{};
+        if(data.activities&&data.activities.length>0)cell.classList.add("has-activity");
+        const numEl=document.createElement("div");
+        numEl.className="day-num";
+        numEl.textContent=day;
+        cell.appendChild(numEl);
+        if(data.activities&&data.activities.length>0){
+          const tagsEl=document.createElement("div");
+          tagsEl.className="activity-tags";
+          data.activities.forEach(a=>{
+            const t=document.createElement("span");
+            t.className="tag "+ACT[a].tagClass;
+            const lbl=(a==="other"&&data.otherText)?data.otherText:ACT[a].label;
+            t.textContent=lbl.length>9?lbl.slice(0,8)+"…":lbl;
+            tagsEl.appendChild(t);
+          });
+          cell.appendChild(tagsEl);
+        }
+        cell.addEventListener("click",()=>openModal(day));
+      }
+      wg.appendChild(cell);
+    });
+    container.appendChild(wg);
+
+    const sw=document.createElement("div");
+    sw.className="week-summary-wrap";
+    const lbl=document.createElement("div");lbl.className="week-summary-label";lbl.textContent="Week "+(wi+1)+" summary";
+    const hints=document.createElement("div");hints.className="week-summary-hints";hints.textContent="Big win · Ah-ha moment · Changes to make";
+    const ta=document.createElement("textarea");
+    ta.className="week-ta";ta.rows=2;ta.placeholder="Reflect on this week…";
+    ta.value=loadWeekText(viewYear,viewMonth,wi);
+    ta.addEventListener("input",()=>{saveWeekText(viewYear,viewMonth,wi,ta.value);showSaved()});
+    sw.appendChild(lbl);sw.appendChild(hints);sw.appendChild(ta);
+    container.appendChild(sw);
+
+    if(wi<weeks.length-1){
+      const sep=document.createElement("div");sep.className="week-divider";
+      container.appendChild(sep);
+    }
+  });
+}
+
+function openModal(day){
+  currentEditDay=day;
+  const data=monthData[day]||{activities:[],otherText:""};
+  currentSel={};
+  (data.activities||[]).forEach(a=>currentSel[a]=true);
+  const d=new Date(viewYear,viewMonth,day);
+  document.getElementById("modalDate").textContent=DAY_NAMES[d.getDay()]+", "+MONTHS[viewMonth]+" "+day;
+  ["dryfire","livefire","fitness","other"].forEach(a=>{
+    document.getElementById("btn-"+a).className="act-btn"+(currentSel[a]?" sel-"+a:"");
+  });
+  const ow=document.getElementById("otherWrap");
+  const oi=document.getElementById("otherInput");
+  if(currentSel["other"]){ow.style.display="block";oi.value=data.otherText||""}
+  else{ow.style.display="none";oi.value=""}
+  document.getElementById("modalOverlay").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+
+function closeModal(){
+  document.getElementById("modalOverlay").classList.remove("open");
+  document.body.style.overflow="";
+  currentEditDay=null;
+}
+
+function toggleAct(a){
+  if(currentSel[a])delete currentSel[a];else currentSel[a]=true;
+  document.getElementById("btn-"+a).className="act-btn"+(currentSel[a]?" sel-"+a:"");
+  if(a==="other"){
+    const ow=document.getElementById("otherWrap");
+    ow.style.display=currentSel["other"]?"block":"none";
+    if(!currentSel["other"])document.getElementById("otherInput").value="";
+  }
+}
+
+function saveDay(){
+  const activities=Object.keys(currentSel).filter(k=>currentSel[k]);
+  const otherText=document.getElementById("otherInput").value.trim();
+  if(activities.length>0){monthData[currentEditDay]={activities,otherText}}
+  else{delete monthData[currentEditDay]}
+  saveMonthData(viewYear,viewMonth,monthData);
+  showSaved();
+  closeModal();
+  buildCalendar();
+}
+
+document.getElementById("modalOverlay").addEventListener("click",function(e){if(e.target===this)closeModal()});
+document.getElementById("mvTa").addEventListener("input",function(){saveMV(viewYear,viewMonth,this.value);showSaved()});
+
+monthData=loadMonthData(viewYear,viewMonth);
+buildCalendar();
+document.getElementById("mvTa").value=loadMV(viewYear,viewMonth);
+</script>
+</body>
+</html>
