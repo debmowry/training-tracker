@@ -411,7 +411,7 @@ let currentWeekIdx=null;
 // ── Google Sheets API ──────────────────────────────────────
 async function gsGet(key){
   try{
-    const r=await fetch(`${SCRIPT_URL}?action=get&key=${encodeURIComponent(key)}`);
+    const r=await fetch(`${SCRIPT_URL}?action=get&key=${encodeURIComponent(key)}`,{redirect:"follow"});
     const j=await r.json();
     return j.value||"";
   }catch(e){console.warn("gsGet failed",e);return"";}
@@ -419,11 +419,9 @@ async function gsGet(key){
 
 async function gsSet(key,value){
   try{
-    await fetch(SCRIPT_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"set",key,value})
-    });
+    // Send as GET to avoid CORS preflight — Apps Script handles this reliably
+    const url=`${SCRIPT_URL}?action=set&key=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}`;
+    await fetch(url,{redirect:"follow"});
   }catch(e){console.warn("gsSet failed",e);}
 }
 
