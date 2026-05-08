@@ -18,7 +18,7 @@ A mobile-friendly training log built for shooters. Track your dry fire, live fir
 
 ## Want Your Own Copy? You're Welcome To It! 🙌
 
-Feel free to fork this repository and make it your own. Whether you're part of AG&G or just a shooter who loves tracking progress, the more people using it the better!
+Feel free to fork this repository and make it your own. Whether you're part of AG&AG or just a shooter who loves tracking progress, the more people using it the better!
 
 Here's what you'll need to do to get your own fully working version up and running. It takes about 15–20 minutes total and you don't need any coding experience.
 
