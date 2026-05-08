@@ -1,4 +1,4 @@
-# 🎯 Training Tracker — A Girl & A Gun Women's Shooting League
+# 🎯 Training Tracker — Based on the "A Girl & A Gun" Training Tracker in their Shooting Journal
 
 A mobile-friendly training log built for shooters. Track your dry fire, live fire, fitness, and other training activities day by day — add weekly reflections and monthly victories — all from your iPhone, iPad, or laptop browser. No app store required.
 
@@ -151,4 +151,4 @@ Your Google Sheet data is completely separate from the app code, so you can upda
 
 ---
 
-*Made with 💜 for the AG&G Women's Shooting League community*
+*Made with 💜 based on the "A Girl & A Gun" Training Tracker in their Shooting Journal*
