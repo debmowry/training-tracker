@@ -548,7 +548,7 @@ async function buildCalendar(){
             const t=document.createElement("span");
             t.className="tag "+ACT[a].tagClass;
             const lbl=(a==="other"&&data.otherText)?data.otherText:ACT[a].label;
-            t.textContent=lbl.length>9?lbl.slice(0,8)+"…":lbl;
+            t.textContent=lbl;
             tagsEl.appendChild(t);
           });
           cell.appendChild(tagsEl);
