@@ -396,6 +396,9 @@ const ACT={
   other:{label:"Other",tagClass:"tag-other"}
 };
 
+// ── REPLACE THIS URL with your Google Apps Script Web App URL ──
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsxGZ3x3yCtBjFKGsCd4fWB0eNZvunrQL7wT62-Kvb4krvPBzIyqf6pgoK2GkPVtBZ/exec";
+
 const realNow=new Date();
 let viewYear=realNow.getFullYear();
 let viewMonth=realNow.getMonth();
@@ -405,39 +408,91 @@ let monthData={};
 let saveTimer=null;
 let currentWeekIdx=null;
 
+// ── Google Sheets API ──────────────────────────────────────
+async function gsGet(key){
+  try{
+    const r=await fetch(`${SCRIPT_URL}?action=get&key=${encodeURIComponent(key)}`);
+    const j=await r.json();
+    return j.value||"";
+  }catch(e){console.warn("gsGet failed",e);return"";}
+}
+
+async function gsSet(key,value){
+  try{
+    await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"set",key,value})
+    });
+  }catch(e){console.warn("gsSet failed",e);}
+}
+
 function storageKey(y,m){return"tt_days_"+y+"_"+m;}
 function weekKey(y,m,wi){return"tt_week_"+y+"_"+m+"_"+wi;}
 function mvKey(y,m){return"tt_mv_"+y+"_"+m;}
 
-function loadMonthData(y,m){try{const r=localStorage.getItem(storageKey(y,m));return r?JSON.parse(r):{}}catch(e){return{}}}
-function saveMonthData(y,m,d){try{localStorage.setItem(storageKey(y,m),JSON.stringify(d))}catch(e){}}
-function loadWeekText(y,m,wi){try{return localStorage.getItem(weekKey(y,m,wi))||""}catch(e){return""}}
-function saveWeekText(y,m,wi,v){try{localStorage.setItem(weekKey(y,m,wi),v)}catch(e){}}
-function loadMV(y,m){try{return localStorage.getItem(mvKey(y,m))||""}catch(e){return""}}
-function saveMV(y,m,v){try{localStorage.setItem(mvKey(y,m),v)}catch(e){}}
+// Load all data for a month in one call
+async function loadMonthData(y,m){
+  showStatus("Loading…","loading");
+  try{
+    const r=await fetch(`${SCRIPT_URL}?action=getMonth&year=${y}&month=${m}`);
+    const j=await r.json();
+    showStatus("","");
+    return j.data||{};
+  }catch(e){
+    showStatus("Offline — changes won't save","error");
+    return{};
+  }
+}
+
+async function saveMonthData(y,m,d){
+  await gsSet(storageKey(y,m),JSON.stringify(d));
+}
+
+async function loadWeekText(y,m,wi){
+  return await gsGet(weekKey(y,m,wi));
+}
+
+async function saveWeekText(y,m,wi,v){
+  await gsSet(weekKey(y,m,wi),v);
+}
+
+async function loadMV(y,m){
+  return await gsGet(mvKey(y,m));
+}
+
+async function saveMV(y,m,v){
+  await gsSet(mvKey(y,m),v);
+}
+
+function showStatus(msg,type){
+  const el=document.getElementById("saveInd");
+  el.textContent=msg;
+  el.style.color=type==="error"?"#c0392b":type==="loading"?"var(--blue)":"var(--olive)";
+}
 
 function showSaved(){
-  const el=document.getElementById("saveInd");
-  el.textContent="✓ Saved";
+  showStatus("✓ Saved","saved");
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(()=>{el.textContent=""},2000);
+  saveTimer=setTimeout(()=>showStatus("",""),2500);
 }
+
 function lockScroll(){document.body.style.overflow="hidden";}
 function unlockScroll(){document.body.style.overflow="";}
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate()}
 function firstDow(y,m){return new Date(y,m,1).getDay()}
 
-function changeMonth(dir){
+async function changeMonth(dir){
   viewMonth+=dir;
   if(viewMonth>11){viewMonth=0;viewYear++}
   if(viewMonth<0){viewMonth=11;viewYear--}
-  monthData=loadMonthData(viewYear,viewMonth);
+  monthData=await loadMonthData(viewYear,viewMonth);
   buildCalendar();
-  refreshMVPreview();
+  await refreshMVPreview();
 }
 
-function refreshMVPreview(){
-  const val=loadMV(viewYear,viewMonth);
+async function refreshMVPreview(){
+  const val=await loadMV(viewYear,viewMonth);
   const el=document.getElementById("mvPreview");
   if(val.trim()){
     el.textContent=val;
@@ -448,7 +503,7 @@ function refreshMVPreview(){
   }
 }
 
-function buildCalendar(){
+async function buildCalendar(){
   document.getElementById("monthLabel").textContent=MONTHS[viewMonth]+" "+viewYear;
   const container=document.getElementById("calBody");
   container.innerHTML="";
@@ -522,7 +577,7 @@ function buildCalendar(){
     hdr.appendChild(hints);
 
     const preview=document.createElement("div");
-    const saved=loadWeekText(viewYear,viewMonth,wi);
+    const saved=await loadWeekText(viewYear,viewMonth,wi);
     if(saved.trim()){
       preview.className="week-summary-preview";
       preview.textContent=saved;
@@ -578,22 +633,23 @@ function toggleAct(a){
   }
 }
 
-function saveDay(){
+async function saveDay(){
   const activities=Object.keys(currentSel).filter(k=>currentSel[k]);
   const otherText=document.getElementById("otherInput").value.trim();
   if(activities.length>0){monthData[currentEditDay]={activities,otherText}}
   else{delete monthData[currentEditDay]}
-  saveMonthData(viewYear,viewMonth,monthData);
+  showStatus("Saving…","loading");
+  await saveMonthData(viewYear,viewMonth,monthData);
   showSaved();
   closeModal();
-  buildCalendar();
+  await buildCalendar();
 }
 
 // Week summary modal
-function openWeekModal(wi){
+async function openWeekModal(wi){
   currentWeekIdx=wi;
   document.getElementById("weekModalTitle").textContent="Week "+(wi+1)+" Summary";
-  document.getElementById("weekModalTa").value=loadWeekText(viewYear,viewMonth,wi);
+  document.getElementById("weekModalTa").value=await loadWeekText(viewYear,viewMonth,wi);
   document.getElementById("weekModalOverlay").classList.add("open");
   lockScroll();
   setTimeout(()=>document.getElementById("weekModalTa").focus(),300);
@@ -605,17 +661,18 @@ function closeWeekModal(){
   currentWeekIdx=null;
 }
 
-function saveWeekModal(){
+async function saveWeekModal(){
   const val=document.getElementById("weekModalTa").value;
-  saveWeekText(viewYear,viewMonth,currentWeekIdx,val);
+  showStatus("Saving…","loading");
+  await saveWeekText(viewYear,viewMonth,currentWeekIdx,val);
   showSaved();
   closeWeekModal();
-  buildCalendar();
+  await buildCalendar();
 }
 
 // Monthly victories modal
-function openMVModal(){
-  document.getElementById("mvModalTa").value=loadMV(viewYear,viewMonth);
+async function openMVModal(){
+  document.getElementById("mvModalTa").value=await loadMV(viewYear,viewMonth);
   document.getElementById("mvModalOverlay").classList.add("open");
   lockScroll();
   setTimeout(()=>document.getElementById("mvModalTa").focus(),300);
@@ -626,12 +683,13 @@ function closeMVModal(){
   unlockScroll();
 }
 
-function saveMVModal(){
+async function saveMVModal(){
   const val=document.getElementById("mvModalTa").value;
-  saveMV(viewYear,viewMonth,val);
+  showStatus("Saving…","loading");
+  await saveMV(viewYear,viewMonth,val);
   showSaved();
   closeMVModal();
-  refreshMVPreview();
+  await refreshMVPreview();
 }
 
 // Close on overlay tap
@@ -645,9 +703,12 @@ function saveMVModal(){
   });
 });
 
-monthData=loadMonthData(viewYear,viewMonth);
-buildCalendar();
-refreshMVPreview();
+async function init(){
+  monthData=await loadMonthData(viewYear,viewMonth);
+  await buildCalendar();
+  await refreshMVPreview();
+}
+init();
 </script>
 </body>
 </html>
