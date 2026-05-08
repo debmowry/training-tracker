@@ -523,6 +523,10 @@ async function buildCalendar(){
   const weeks=[];
   for(let i=0;i<cells.length;i+=7)weeks.push(cells.slice(i,i+7));
 
+  // Pre-fetch all week summary texts in parallel before building DOM
+  const weekTexts=await Promise.all(weeks.map((_,wi)=>loadWeekText(viewYear,viewMonth,wi)));
+
+  // Now build DOM synchronously — no await needed inside loop
   weeks.forEach((week,wi)=>{
     const wg=document.createElement("div");
     wg.className="week-grid";
@@ -577,7 +581,7 @@ async function buildCalendar(){
     hdr.appendChild(hints);
 
     const preview=document.createElement("div");
-    const saved=await loadWeekText(viewYear,viewMonth,wi);
+    const saved=weekTexts[wi]||"";
     if(saved.trim()){
       preview.className="week-summary-preview";
       preview.textContent=saved;
