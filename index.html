@@ -146,10 +146,16 @@ body {
 }
 .week-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 3px; }
 .day-cell {
-  border: 1px solid var(--border); border-radius: 8px; padding: 4px; min-height: 58px;
-  background: var(--card); cursor: pointer;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 58px;
+  min-width: 0;
+  padding: 4px;
   transition: border-color 0.15s, background 0.15s;
-  -webkit-user-select: none; user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .day-cell:active { background: var(--purple-light); }
 .day-cell.today { border-color: var(--purple); border-width: 2px; }
@@ -157,13 +163,22 @@ body {
 .day-cell.has-activity { background: var(--purple-pale); border-color: var(--purple); }
 .day-num { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1; margin-bottom: 3px; }
 .day-cell.today .day-num { color: var(--purple); font-weight: 700; }
-.activity-tags { display: flex; flex-wrap: wrap; gap: 2px; }
+.activity-tags {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
+}
 .tag {
   font-size: 12px;
   font-weight: 600;
   padding: 2px 4px;
   border-radius: 4px;
-  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   max-width: 100%;
   letter-spacing: 0.2px;
 }
@@ -341,12 +356,19 @@ body {
   .month-victories-wrap { border: 2px solid var(--purple) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
-/* Mobile */
-@media (max-width: 480px) {
+/* Mobile horizontal view / Tablet */
+@media (min-width: 480px) {
   .tag {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .day-cell {
+    min-height: 70px;
   }
 }
 </style>
