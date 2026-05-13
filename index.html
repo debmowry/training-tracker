@@ -159,8 +159,13 @@ body {
 .day-cell.today .day-num { color: var(--purple); font-weight: 700; }
 .activity-tags { display: flex; flex-wrap: wrap; gap: 2px; }
 .tag {
-  font-size: 12px; font-weight: 600; padding: 2px 4px; border-radius: 4px;
-  white-space: normal; max-width: 100%; letter-spacing: 0.2px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: normal;
+  max-width: 100%;
+  letter-spacing: 0.2px;
 }
 .tag-dryfire { background: var(--purple-pale); color: var(--purple-dark); }
 .tag-livefire { background: var(--orange-pale); color: var(--orange-dark); }
@@ -334,6 +339,15 @@ body {
   .week-summary-preview, .mv-preview { white-space: normal; }
   .day-cell.has-activity { background: #ede9f4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .month-victories-wrap { border: 2px solid var(--purple) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .tag {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 </style>
 </head>
